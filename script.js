@@ -1,8 +1,8 @@
 // ========================================================
-// 1. ضع رقم الواتساب الخاص بالمطعم هنا (مع مفتاح الدولة)
-// مثال للعراق: 9647700000000 (بدون علامة + أو أصفار بالبداية)
+// 1. إعدادات التلجرام
 // ========================================================
-const WHATSAPP_NUMBER = "9647800000000";
+const TELEGRAM_BOT_TOKEN = "8529273467:AAHZUXN4FW7pQaOLyTaImqmr2tp5c3ORUfo";
+const TELEGRAM_CHAT_ID = "7821966897";
 
 // ========================================================
 // 2. قاعدة بيانات المنيو (تستطيع إضافة، حذف أو تعديل الوجبات والصور براحتك)
@@ -152,29 +152,117 @@ cartModal.addEventListener('click', (e) => {
 });
 
 // ========================================================
-// 5. نظام إرسال الفاتورة عبر واتساب
+// 5. نظام إرسال الفاتورة عبر تلجرام
 // ========================================================
-window.sendOrderWhatsApp = function() {
+window.sendOrderTelegram = function() {
+    const name = document.getElementById('cust-name').value.trim();
+    const phone = document.getElementById('cust-phone').value.trim();
+
+    if (!name || !phone) {
+        alert("يرجى إدخال الاسم ورقم الهاتف لتأكيد الطلب.");
+        return;
+    }
+
     if (cart.length === 0) return;
 
-    let message = "مرحباً، أود تقديم الطلب التالي:%0A%0A";
     let total = 0;
-
-    cart.forEach((item, index) => {
-        message += `▪️ ${item.title} (الكمية: ${item.quantity}) - ${(item.price * item.quantity).toLocaleString()} د.ع%0A`;
-        total += item.price * item.quantity;
+    const itemsForLink = cart.map(item => {
+        total += (item.price * item.quantity);
+        return { title: item.title, qty: item.quantity };
     });
 
-    message += `%0A======================%0A`;
-    message += `💰 *الإجمالي الكلي: ${total.toLocaleString()} د.ع*%0A`;
-    message += `======================%0A`;
-    message += `الرجاء تأكيد الطلب وتجهيزه، شكراً لكم.`;
+    // تجهيز بيانات الطلب وتحويلها لرابط مشفر
+    const orderData = {
+        customer: name,
+        phone: phone,
+        items: itemsForLink,
+        total: total
+    };
 
-    const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-    window.open(whatsappLink, "_blank");
+    const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(orderData))));
+    const viewLink = window.location.href.split('?')[0] + "?order=" + encodedData;
+
+    // تجهيز الرسالة للبوت
+    let message = `🔔 *طلب جديد من المتجر!*\n\n`;
+    message += `👤 الاسم: ${name}\n`;
+    message += `📞 الهاتف: ${phone}\n`;
+    message += `💰 الإجمالي: ${total.toLocaleString()} د.ع\n\n`;
+    message += `🔗 [اضغط هنا لعرض تفاصيل الطلب بالكامل](${viewLink})`;
+
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = 'جاري الإرسال... <i class="fa-solid fa-spinner fa-spin"></i>';
+    checkoutBtn.disabled = true;
+
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: "Markdown",
+            disable_web_page_preview: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.ok) {
+            alert("تم إرسال طلبك بنجاح! شكراً لك.");
+            cart = [];
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            updateCartUI();
+            cartModal.classList.remove('show');
+        } else {
+            alert("حدث خطأ أثناء الإرسال. الرجاء المحاولة لاحقاً.");
+        }
+    })
+    .catch(error => {
+        alert("تأكد من اتصالك بالإنترنت.");
+    })
+    .finally(() => {
+        checkoutBtn.innerHTML = originalText;
+        checkoutBtn.disabled = false;
+    });
+}
+
+// ========================================================
+// 6. نظام استقبال وعرض الطلب (عند الضغط على الرابط من التلجرام)
+// ========================================================
+function checkIncomingOrder() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderRaw = urlParams.get('order');
+    
+    if (orderRaw) {
+        try {
+            const decodedData = JSON.parse(decodeURIComponent(escape(atob(orderRaw))));
+            
+            let msg = `📋 **تفاصيل الطلب المستلم**\n\n`;
+            msg += `👤 اسم الزبون: ${decodedData.customer}\n`;
+            msg += `📞 رقم الهاتف: ${decodedData.phone}\n\n`;
+            msg += `🛍️ **المنتجات المطلوبة:**\n`;
+            
+            decodedData.items.forEach(i => {
+                msg += `- ${i.title} (الكمية: ${i.qty})\n`;
+            });
+            
+            msg += `\n💰 المجموع الكلي: ${decodedData.total.toLocaleString()} د.ع`;
+            
+            alert(msg);
+            
+            // إزالة الكود من الرابط بعد فتحه حتى لا يظهر مرة أخرى عند التحديث
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+        } catch(e) {
+            alert("عذراً، رابط الطلب غير صالح أو تالف.");
+        }
+    }
 }
 
 // تشغيل الموقع لأول مرة
 renderCategories();
 renderMenu();
 updateCartUI();
+checkIncomingOrder();
