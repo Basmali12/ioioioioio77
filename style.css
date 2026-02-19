@@ -2,7 +2,7 @@
 :root {
     --primary: #FF5722; /* لون برتقالي لفتح الشهية (تستطيع تغييره) */
     --primary-dark: #E64A19;
-    --whatsapp: #25D366;
+    --telegram: #0088cc; /* تم التغيير للون التلجرام بدلاً من الواتساب */
     --bg-color: #f8f9fa;
     --card-bg: #ffffff;
     --text-main: #2f3542;
@@ -148,9 +148,10 @@ body {
 .total-price { color: var(--primary); font-size: 20px; }
 
 .checkout-btn {
-    width: 100%; background: var(--whatsapp); color: #fff; border: none;
+    width: 100%; background: var(--telegram); color: #fff; border: none;
     padding: 15px; border-radius: 15px; font-size: 18px; font-weight: 800;
     display: flex; justify-content: center; align-items: center; gap: 10px;
-    cursor: pointer; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: 0.2s;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3); transition: 0.2s;
 }
 .checkout-btn:active { transform: scale(0.98); }
+.checkout-btn:disabled { opacity: 0.7; cursor: not-allowed; }
