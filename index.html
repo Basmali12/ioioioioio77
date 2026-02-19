@@ -47,12 +47,16 @@
                 </div>
             
             <div class="cart-footer">
+                <div class="customer-info" style="margin-bottom: 15px;">
+                    <input type="text" id="cust-name" placeholder="اسمك الكامل" style="width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #dcdde1; font-family: 'Tajawal', sans-serif; font-size: 15px;">
+                    <input type="tel" id="cust-phone" placeholder="رقم الهاتف" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #dcdde1; font-family: 'Tajawal', sans-serif; font-size: 15px;">
+                </div>
                 <div class="total-price-container">
                     <span>المجموع الكلي:</span>
                     <span id="total-price" class="total-price">0 د.ع</span>
                 </div>
-                <button class="checkout-btn" onclick="sendOrderWhatsApp()">
-                    تأكيد الطلب واتساب <i class="fa-brands fa-whatsapp"></i>
+                <button class="checkout-btn" onclick="sendOrderTelegram()">
+                    تأكيد الطلب تلجرام <i class="fa-brands fa-telegram"></i>
                 </button>
             </div>
         </div>
